@@ -11,7 +11,8 @@ class Installation extends Command
      *
      * @var string
      */
-    protected $signature = 'fixit:install';
+    // MODIFICATION: Added {--dummy} and {--force} options
+    protected $signature = 'fixit:install {--dummy} {--force}';
 
     /**
      * The console command description.
@@ -26,17 +27,19 @@ class Installation extends Command
     public function handle()
     {
         $appName = config('app.name');
-        $this->info('If you have previously run this command or migrated tables, be advised that it will erase all of your data.');
-        if ($this->confirm('Do you want to continue installation?')) {
+
+        // MODIFICATION: Check for the --force flag instead of asking for confirmation.
+        if ($this->option('force')) {
             $this->info("Installing {$appName} ...");
-            if ($this->confirm('Do you want to import dummy data?')) {
+
+            // MODIFICATION: Check for the --dummy flag.
+            if ($this->option('dummy')) {
                 $this->call('db:wipe');
                 $this->info('Dropping all tables...');
                 $this->info('Importing dummy data...');
                 $this->call('fixit:import');
                 $this->info('Dummy Data Imported Successfully!');
             } else {
-
                 $this->info('Migration is being run to build tables...');
                 $this->call('migrate:fresh');
                 $this->info('The seeder is being used for Generating the Administrator Credentials.');
@@ -46,6 +49,9 @@ class Installation extends Command
 
             $this->info('');
             $this->info("{$appName} installed Successfully.");
+        } else {
+             // Inform the user that the --force flag is required.
+            $this->error('This is a destructive command. Please use the --force option to run the installation.');
         }
     }
 }
